@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+      }
+      .ripple-c {
+        width: 300px;
+        height: 200px;
+        background-color: #f5f5f5;
+        cursor: pointer;
+        box-shadow: 0 3px 1px -2px rgba(0, 0, 0, 0.2),
+          0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12);
+        margin: 200px auto;
+        color: #2979ff;
+      }
+      .my-ripple {
+        position: absolute;
+        transition: transform 0.2s cubic-bezier(0.68, 0.01, 0.62, 0.6),
+          opacity 0.14s linear;
+        top: 0;
+        left: 0;
+        border-radius: 50%;
+        opacity: 0;
+        will-change: transform, opacity;
+        pointer-events: none;
+        z-index: 100;
+      }
+      .my-button {
+        position: relative;
+        justify-content: center;
+        align-items: center;
+        outline: none;
+        border: none;
+        border-radius: 4px;
+        user-select: none;
+        cursor: pointer;
+        font-family: inherit;
+        transition: box-shadow 0.2s, background-color 0.25s;
+        will-change: box-shadow;
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+        white-space: nowrap;
+        line-height: 1;
+        color: #fff;
+        background-color: #00c48f;
+        padding: 0 15px;
+        box-sizing: border-box;
+        height: 36px;
+        box-shadow: 0 3px 1px -2px rgba(0, 0, 0, 0.2),
+          0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12);
+        position: absolute;
+        left: 100px;
+        top: 100px;
+      }
+      .my-button:active {
+        box-shadow: 0 3px 5px -1px rgba(0, 0, 0, 0.2),
+          0 5px 8px 0 rgba(0, 0, 0, 0.14), 0 1px 14px 0 rgba(0, 0, 0, 0.12);
+      }
+      .my-button-content {
+        line-height: 1;
+        font-weight: 400;
+        font-size: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <button class="my-button set-ripple">
+      <div class="my-button-content">成功按钮</div>
+    </button>
+    <div class="ripple-c set-ripple"></div>
+  </body>
+</html>
+
+<script>
+  const rippleDom = document.querySelectorAll(".set-ripple");
+  function setStyles(element) {
+    const { zIndex, position } = window.getComputedStyle(element);
+    element.style.overflow = "hidden";
+    element.style.overflowX = "hidden";
+    element.style.overflowY = "hidden";
+    position === "static" && (element.style.position = "relative");
+    zIndex === "auto" && (element.style.zIndex = "1");
+  }
+
+  function computeRippleStyles(element, e) {
+    const { top, left } = element.getBoundingClientRect();
+    const { clientWidth, clientHeight } = element;
+
+    const radius = Math.sqrt(clientWidth ** 2 + clientHeight ** 2) / 2; //根据多边形的长宽算斜边-求出半径
+    const size = radius * 2; // 圆形的宽高
+
+    const localX = e.x - left;
+    const localY = e.y - top;
+
+    const centerX = (clientWidth - radius * 2) / 2; // 确保位移到多边形中点
+    const centerY = (clientHeight - radius * 2) / 2;
+
+    const x = localX - radius;
+    const y = localY - radius;
+    return { x, y, centerX, centerY, size };
+  }
+
+  function createRipple(element, e) {
+    const { x, y, centerX, centerY, size } = computeRippleStyles(element, e);
+    const ripple = document.createElement("div");
+    const bc = element.getAttribute("data-ripple-c");
+    ripple.classList.add("my-ripple");
+    ripple.style.opacity = `0`;
+    ripple.style.transform = `translate(${x}px, ${y}px) scale3d(.3, .3, .3)`;
+    ripple.style.width = `${size}px`;
+    ripple.style.height = `${size}px`;
+    ripple.style.backgroundColor = bc ? bc : "currentColor";
+    setStyles(element);
+    element.appendChild(ripple);
+    setTimeout(() => {
+      ripple.style.transform = `translate(${centerX}px, ${centerY}px) scale3d(1, 1, 1)`;
+      ripple.style.opacity = `.25`;
+    }, 20);
+    setTimeout(() => {
+      ripple.style.opacity = 0;
+      setTimeout(() => {
+        element.removeChild(ripple);
+      }, 140);
+    }, 300);
+  }
+  const rippleDomList = [...rippleDom];
+  rippleDomList.forEach((item) => {
+    item.onclick = function (e) {
+      e.preventDefault();
+      const rippleTarget = e.target;
+      if (item === rippleTarget) {
+        createRipple(rippleTarget, e);
+      } else {
+        createRipple(rippleTarget.parentElement, e);
+      }
+    };
+  });
+</script>

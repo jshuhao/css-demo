@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+      }
+      .ball {
+        margin-left: 100px;
+        width: 50px;
+        height: 50px;
+        border-radius: 50px;
+        background-color: red;
+        /* box-shadow: 1px 1px 1px #ccc; */
+        animation: bounce 3s cubic-bezier(0.1, 0.25, 1, 0.25) forwards;
+      }
+
+      @keyframes bounce {
+        60%,
+        80%,
+        to {
+          transform: translateY(400px);
+          animation-timing-function: ease;
+        }
+        70% {
+          transform: translateY(330px);
+        }
+        90% {
+          transform: translateY(360px);
+        }
+      }
+
+      .tip {
+        position: relative;
+        margin: 30px;
+      }
+      .callout {
+        position: absolute;
+        width: 250px;
+        left: 0;
+        top: 55px;
+        color: #562f14;
+        background-color: #feebc0;
+        padding: 10px;
+        border-radius: 5px;
+        box-shadow: 1px 1px 1px rgba(0, 0, 0, 0.4);
+        /* transition: transform 0.5s; */
+        transition:transform .5s cubic-bezier(0.25, 0.1, 0.3, 1.5);
+        transform-origin: 1.4em -0.4em;
+      }
+      .callout::before {
+        content: "";
+        width: 0;
+        height: 0;
+        position: absolute;
+        left: 15px;
+        top: -20px;
+        border: 10px solid transparent;
+        border-bottom-color: #feebc0;
+      }
+      input:not(:focus) + .callout {
+        transform: scale(0);
+				transition:transform .25s ;
+      }
+
+      input:focus + .callout {
+        /* animation: elastic-grow .5s; */
+      }
+
+      @keyframes elastic-grow {
+        from {
+          transform: scale(0);
+        }
+        70% {
+          transform: scale(1.1);
+          animation-timing-function: cubic-bezier(0.1, 0.25, 0.1, 0.25);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- <div class="ball"></div> -->
+    <div class="tip">
+      <label>
+        <div>Your username:</div>
+        <input id="username" type="text" autocomplete="off" />
+        <span class="callout"
+          >Only letters，numbers,underscores (_) and hyphens (-) allowed!</span
+        >
+      </label>
+    </div>
+  </body>
+</html>

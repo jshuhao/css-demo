@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        width: 100vw;
+        height: 100vh;
+      }
+      .container {
+        width: 100%;
+        height: 100%;
+        background: url("./img/bg1.jpg") no-repeat 0 0;
+        background-size: cover;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .text-box {
+				position: relative;
+        width: 600px;
+        height: 400px;
+				display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: flex-start;
+        font-size: 22px;
+        border-radius: 5px;
+        padding: 20px 40px;
+        box-sizing: border-box;
+				background-color: hsla(0, 0%, 100%, 0.3);
+				box-shadow: 4px 3px 1px #ccc;
+				overflow: hidden;
+      }
+			.text-box::before{
+				content: "";
+				width: 100%;
+				height: 100%;
+				position: absolute;
+				left: 0;
+				top: 0;
+				background: inherit;
+				filter: blur(20px);
+				margin: -30px;
+			}
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="text-box">
+        <div>
+          "The only teay to get rid of a temptation is to yield to it.Resist
+          it,and your soul grozes sick with longing for thethings it has
+          forbidden to itself, with desire for what itsmonstrous laes have made
+          monstrous and urlaful.”
+        </div>
+        <div style="margin-top: 10px">
+          -Oscar Wilde, The Picture of Dorian Gray
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

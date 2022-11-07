@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #000;
+      }
+      .text-box {
+        position: relative;
+        text-transform: uppercase;
+        color: #333;
+        font-size: 112px;
+        /* padding: 10px; */
+      }
+      .text-box::after {
+        content: "hello world";
+        position: absolute;
+        left: 0;
+        top: 0;
+        color: transparent;
+        text-transform: uppercase;
+        background: linear-gradient(
+          to right,
+          #ff69b3,
+          #fe0003,
+          #ffa401,
+          #ffff01,
+          #008102,
+          #40e1d2,
+          #9400d4
+        );
+        background-clip: text;
+        -webkit-background-clip: text;
+        clip-path: circle(100px at 0 50%);
+        animation: move 4s ease-in-out infinite forwards;
+      }
+      @keyframes move {
+        0% {
+          clip-path: circle(100px at 0 50%);
+        }
+        50% {
+          clip-path: circle(100px at 100% 50%);
+        }
+        100% {
+          clip-path: circle(100px at 0% 50%);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h1 class="text-box">hello world</h1>
+  </body>
+</html>

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .box {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            border: 2px solid #ccc;
+            display: flex;
+        }
+
+        .circle-box {
+            width: 50%;
+            height: 100%;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .circle {
+            width: 200%;
+            height: 100%;
+            border: 4px solid transparent;
+            border-radius: 50%;
+            box-sizing: border-box;
+            position: absolute;
+            top: 0;
+            transform: rotateZ(-45deg);
+        }
+
+        .right-circle {
+            left: -50%;
+            margin-left: -50%;
+            border-left: 4px solid #1ac4c7;
+            border-top: 4px solid #1ac4c7;
+        }
+
+        .left-circle {
+            left: 0;
+            border-top: 4px solid #1ac4c7;
+            border-left: 4px solid #1ac4c7;
+            transform: rotateZ(-225deg);
+        }
+
+        .percent {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="box">
+        <div class="percent">0%</div>
+        <div class="circle-box">
+            <div class="circle left-circle">
+            </div>
+        </div>
+        <div class="circle-box">
+            <div class="circle right-circle">
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
+<script>
+    let percentNum = 0
+    const percent = document.querySelector('.percent')
+    const rightCircle = document.querySelector('.right-circle')
+    const leftCircle = document.querySelector('.left-circle')
+    const timer = setInterval(() => {
+        percentNum++
+        changeSchedule(percentNum)
+        console.log(percent)
+        percent.innerHTML = percentNum + '%'
+        if (percentNum >= 100) {
+            clearInterval(timer)
+        }
+    }, 40)
+    function changeSchedule(percentNum) {
+        const currentDeg = parseInt(percentNum / 100 * 360)
+        if (percentNum <= 50) {
+            rightCircle.style.transform = `rotateZ(${-45 + currentDeg}deg)`
+        } else {
+            leftCircle.style.transform = `rotateZ(${-225 + (currentDeg - 180)}deg)`
+        }
+    }
+</script>

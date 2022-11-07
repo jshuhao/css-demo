@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Document</title>
+	<style>
+		*{
+			margin: 0;
+			padding: 0;
+		}
+		body{
+			width: 100vw;
+			height: 100vh;
+			background-color: #000;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+		}
+
+		/* 第一种 染色 看起来像是褪色图 */
+		/* img{
+			filter: sepia(1) saturate(4) hue-rotate(295deg);
+			transition: all .5s;
+		}
+		img:hover,img:focus{
+			filter: none;
+		} */
+
+		/* 第二种 染色  不可动画 */
+		/* .img-box{
+			background-color: hsl(335, 100%, 50%);
+			transition: all .5s;
+		}
+		img{
+			mix-blend-mode: luminosity;
+		}
+		.img-box:hover{
+			background-color: transparent;
+		} */
+
+		/* 第三种 染色  没有img标签 */
+		.img-box{
+			width: 400px;
+			height: 478px;
+			transition: all .5s;
+			background-blend-mode: luminosity;
+			background-color: hsl(335, 100%, 50%);
+		}
+		.img-box:hover{
+			background-color: transparent;
+		}
+	</style>
+</head>
+<body>
+	<!-- 染色 -->
+		<!-- <div class="img-box">
+					<img src="./img/card_1.jpg" alt="">
+		</div> -->
+		<!-- 染色 3 -->
+		<div class="img-box" style="background-image: url(./img/card_1.jpg);">
+		
+		</div> 
+</div>
+</body>
+</html>

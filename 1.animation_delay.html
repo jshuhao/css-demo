@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Document</title>
+	<style>
+		*{
+			margin: 0;
+			padding: 0;
+		}
+		.box{
+			width: 500px;
+			height: 500px;
+			position: relative;
+			margin: 100px auto;
+		}
+		.ball{
+			width: 50px;
+			height: 50px;
+			background-color: #000;
+			border-radius: 50%;
+			position: absolute;
+			left: 0;
+			top: 0;
+			transform-origin: 60px 60px;
+			animation: move 3s linear infinite;
+		}
+		.ball:nth-child(2){
+			animation-delay: -1s;
+		}
+		.ball:nth-child(3){
+			animation-delay: -2s;
+		}
+		@keyframes move {
+				0%{
+					transform: rotate(0);
+				}
+				0%{
+					transform: rotate(360deg);
+				}
+		}
+	</style>
+</head>
+<body>
+		<div class="box">
+				<div class="ball"></div>
+				<div class="ball"></div>
+				<div class="ball"></div>
+		</div>
+</body>
+</html>

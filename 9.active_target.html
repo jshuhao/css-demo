@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .box {
+            width: 200px;
+            height: 200px;
+            background: red;
+            color: #fff;
+        }
+
+        .box:active {
+            background-color: green;
+        }
+
+        p {
+            margin-top: 1000px;
+            margin-bottom: 1000px;
+        }
+
+        p:target {
+            background-color: gold;
+        }
+
+        /* 在目标元素中增加一个伪元素*/
+        #p1:target::before {
+            content: "►";
+            font: 70% sans-serif;
+            color: limegreen;
+            margin-right: .25em;
+        }
+
+        /*在目标元素中使用italic样式*/
+        p:target i {
+            color: red;
+        }
+    </style>
+</head>
+
+<body>
+    <a href="#p1">jump P1</a>
+    <a href="#p2">jump P2</a>
+    <div class="box">
+        1
+    </div>
+    <p id="p1">
+        You can target1 <i>this paragraph</i> using a
+        URL fragment. Click on the link above to try out!
+    </p>
+    <p id="p2">
+        You can target2 <i>this paragraph</i> using a
+        URL fragment. Click on the link above to try out!
+    </p>
+</body>
+
+</html>

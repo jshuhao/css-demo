@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+      }
+      h1 {
+        width: 100%;
+        height: 80px;
+        position: sticky;
+        left: 0;
+        top: 0;
+        font-size: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 1px 1px 1px #ccc;
+        background-color: #fff;
+      }
+      .main {
+        /* display: flex; */
+        scroll-padding: 80px;
+        scroll-snap-type: y mandatory; /* 方向 滚动方式 */
+        height: 100vh;
+        overflow-y: scroll; /* 父级设置滚动 */
+      }
+      .box {
+        width: 100%;
+        height: 100vh;
+        scroll-snap-align: start; /* 子元素滚动的位置 start center end */
+				scroll-snap-stop: always;			
+        color: #fff;
+        font-size: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        /* flex-shrink: 0; */
+      }
+      .box:nth-of-type(1) {
+        background-color: red;
+      }
+      .box:nth-of-type(2) {
+        background-color: green;
+      }
+      .box:nth-of-type(3) {
+        background-color: orange;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="main">
+      <h1>我是标题</h1>
+      <div class="box">页面1</div>
+      <div class="box">页面2</div>
+      <div class="box">页面3</div>
+    </div>
+  </body>
+</html>
