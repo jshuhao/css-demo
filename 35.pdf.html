@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PDF.js 文本提取和翻译对齐</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        display: flex;
+        font-family: Arial, sans-serif;
+      }
+      #pdf-container {
+        display: flex;
+        width: 100%;
+        height: 100vh;
+        overflow-x: hidden;
+        position: relative;
+      }
+      #left-column,
+      #right-column {
+        width: 50%;
+        height: 100%;
+        position: relative;
+        border: 1px solid #ddd;
+      }
+      #left-column {
+        background-color: #f9f9f9;
+        :is(span, br) {
+          color: transparent;
+          cursor: text;
+          margin: 0;
+          position: absolute;
+          transform-origin: 0 0;
+          white-space: pre;
+        }
+        .textLayer {
+          inset: 0;
+          line-height: 1;
+          overflow: hidden;
+          position: absolute;
+          text-align: left;
+          text-align: initial;
+          text-size-adjust: none;
+          forced-color-adjust: none;
+          transform-origin: 0 0;
+          z-index: 2;
+        }
+        canvas {
+          user-select: none;
+        }
+      }
+      #right-column {
+        background-color: #eef;
+        position: relative;
+        .polymerize-text {
+          background-color: blue;
+          line-height: 1.4 !important;
+          overflow: hidden;
+          &::after {
+            background-image: linear-gradient(180deg, transparent, #fff);
+            bottom: 0;
+            content: "";
+            height: 5px;
+            left: 0;
+            max-height: calc(100% - 3px);
+            position: absolute;
+            right: 0;
+          }
+          &:hover {
+            overflow: inherit;
+            height: auto !important;
+            z-index: 99;
+            &::after {
+              opacity: 0;
+            }
+          }
+        }
+      }
+      .text-block {
+        position: absolute;
+        white-space: nowrap;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="pdf-container">
+      <div id="left-column">
+        <canvas id="pdf_canvas"></canvas>
+      </div>
+      <div id="right-column">
+        <canvas id="pdf_canvas_2"></canvas>
+        <div id="render_box"></div>
+      </div>
+    </div>
+    <script>
+      const pdfjsLib = window["pdfjs-dist/build/pdf"];
+      // 设置 workerSrc 路径
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
+        "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js";
+
+      // 加载 PDF 文件
+      const url = "./pdf/2.pdf"; // 替换为你的 PDF 文件路径
+      const loadingTask = pdfjsLib.getDocument(url);
+      const targetWidth = window.innerWidth / 2;
+      const targetHeight = window.innerHeight;
+      const canvas = document.getElementById("pdf_canvas");
+      const canvas2 = document.getElementById("pdf_canvas_2");
+      const ctx = canvas.getContext("2d");
+      const ctx2 = canvas2.getContext("2d");
+
+      // 分段聚合文字数据
+      const polymerizeTextList = (domList) => {
+        const sectionList = [];
+        let reset = 0;
+        const curSection = {
+          width: 0,
+          height: 0,
+          fontSize: "",
+          fontFamily: "",
+          x: 0,
+          y: 0,
+          text: "",
+        };
+        let lastHeight = 0;
+        let lastLeft = 0;
+        let lastTop = 0;
+        let lastTopMin = 0;
+        const heightDis = 15;
+
+        for (let i = 0; i < domList.length; i++) {
+          const item = domList[i];
+          const curText = item.innerText;
+          const rect = item.getBoundingClientRect();
+          // 记录最开始的x,y坐标
+          if (reset === 0) {
+            reset = 1;
+            curSection.x = rect.x;
+            curSection.y = rect.y;
+          }
+          if (curText) {
+            curSection.text += curText;
+            curSection.fontFamily = item.style.fontFamily;
+            const fontSizeNum = Number.parseInt(item.style.fontSize);
+            curSection.fontSize = Math.max(fontSizeNum, curSection.fontSize);
+            lastHeight = Math.max(lastHeight, rect.height);
+            lastLeft = rect.x + rect.width;
+            lastTop = rect.y;
+            lastTopMin = lastTopMin > 0 ? Math.min(lastTopMin, rect.y) : rect.y;
+          } else {
+            curSection.text += " ";
+          }
+          if (item.nodeName === "BR") {
+            const nextItem = domList[i + 1];
+            if (nextItem) {
+              const nextRect = nextItem.getBoundingClientRect();
+              const nextFontSize = Number.parseInt(nextItem.style.fontSize);
+              const diff = nextRect.y - (lastTop + lastHeight);
+              curSection.height += lastHeight + diff;
+              curSection.width = Math.max(
+                curSection.width,
+                lastLeft - curSection.x
+              );
+              if (curSection.fontSize !== nextFontSize || diff > heightDis) {
+                curSection.height -= diff;
+                curSection.y = Math.min(curSection.y, lastTopMin);
+                sectionList.push(Object.assign({}, curSection));
+                curSection.text = "";
+                curSection.width = "";
+                curSection.height = 0;
+                curSection.fontSize = "";
+                curSection.x = nextRect.x;
+                curSection.y = nextRect.y;
+                lastHeight = 0;
+                lastTopMin = 0;
+              }
+              lastTop = 0;
+            }
+          }
+        }
+        return sectionList;
+      };
+
+      const chinaText = [
+        "美丽",
+        "人们都在为生活努力地奋斗着呀",
+        "这座城市有着化韵味呢",
+        "大自然的景人赏心悦目哦",
+        "我们的生我们的生活充满了各种各样惊喜我们的生活充满了各种各样惊喜我们的生活充满了各种各样惊喜我们的生活充满了各种各样惊喜我们的生活充满了各种各样惊喜我们的生活充满了各种各样惊喜我们的生活充满了各种各样惊喜活充满了各种各样惊喜",
+        "好好学习知识才能更好地进步呀",
+        "亲情是人世间最温暖的一种情感",
+        "努力工作是心中梦想呢",
+        "那片山林中趣的故事",
+        "健康的身体是一切的根本所在呀",
+        "每天保持好心情生活就更美好哦",
+        "朋友们相聚在一起总是特别欢乐",
+        "读书可以让人开阔眼界增长见识",
+        "传统文化有着深厚且独特魅力呢",
+        "家乡的美食无穷呀",
+        "运动能让我力体魄",
+        "用心去感受这世与温暖",
+        "爱护环境才能量哦",
+        "旅行可以让我们领景旅行可以让我们领景",
+        "旅行可以",
+        "旅行可以22",
+      ];
+      // 渲染聚合数据
+      const renderPolymerizeTextList = (data) => {
+        console.log("sectionList", data);
+        data.forEach((item, index) => {
+          item.translateText = chinaText[index];
+        });
+        const renderBox = document.getElementById("render_box");
+        let domStr = "";
+        for (const item of data) {
+          const curDomStr = `<span style="width:${item.width}px;min-height:${item.height}px;height:${item.height}px;font-size:${item.fontSize}px;font-family:${item.fontFamily};left:${item.x}px;top:${item.y}px;position:absolute" class="polymerize-text">${item.translateText}</span>`;
+          domStr += curDomStr;
+        }
+        renderBox.innerHTML = domStr;
+      };
+
+      loadingTask.promise.then((pdfDocument) => {
+        pdfDocument.getPage(1).then(async (page) => {
+          // 获取 PDF 页面容器
+          const container = document.getElementById("left-column");
+
+          // 创建文本层容器
+          const textLayerDiv = document.createElement("div");
+          textLayerDiv.className = "textLayer";
+          container.appendChild(textLayerDiv);
+
+          // 定义缩放级别（影响文本渲染的大小和位置）
+          const viewport = page.getViewport({ scale: 1 });
+          const originalWidth = viewport.width;
+          const originalHeight = viewport.height;
+          const scale = targetWidth
+            ? targetWidth / viewport.width
+            : targetHeight / viewport.height;
+
+          // 设置容器尺寸
+          // 使用新的缩放比例获取 viewport
+          const adjustedViewport = page.getViewport({ scale });
+          textLayerDiv.style.width = `${adjustedViewport.width}px`;
+          textLayerDiv.style.height = `${adjustedViewport.height}px`;
+
+          // 4. 设置 canvas 的尺寸
+          canvas.width = adjustedViewport.width;
+          canvas.height = adjustedViewport.height;
+          const renderContext = {
+            canvasContext: ctx,
+            viewport: adjustedViewport,
+          };
+          page.render(renderContext);
+          canvas2.width = adjustedViewport.width;
+          canvas2.height = adjustedViewport.height;
+          const renderContext2 = {
+            canvasContext: ctx2,
+            viewport: adjustedViewport,
+          };
+          page.render(renderContext2);
+
+          // 获取文本内容
+          page.getTextContent().then((textContent) => {
+            console.log("textContent", textContent);
+            // 创建文本层渲染器
+            const textLayer = pdfjsLib.renderTextLayer({
+              textContent: textContent, // 文本内容
+              container: textLayerDiv, // 渲染目标容器
+              viewport: viewport, // 缩放视口
+              textDivs: [], // 文本块元素数组（自动生成）
+              viewport: adjustedViewport,
+            });
+
+            // 完成渲染
+            textLayer.promise.then(() => {
+              const children = [...textLayerDiv.children];
+              // 聚合数据
+              const textData = polymerizeTextList(children);
+              renderPolymerizeTextList(textData);
+            });
+          });
+        });
+      });
+    </script>
+  </body>
+</html>
