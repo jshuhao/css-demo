@@ -114,6 +114,15 @@
       const ctx = canvas.getContext("2d");
       const ctx2 = canvas2.getContext("2d");
 
+      // 判断单词数量
+      const countWords = (text) => {
+        const cleanedText = text.replace(/[,.?'"!，。？“”！]/g, "");
+        // 正则表达式匹配单词或中文字符
+        const words = cleanedText.match(/[\u4e00-\u9fa5]|[a-zA-Z0-9'-@]+/g);
+        // 返回匹配到的单词数量
+        return words ? words.length : 0;
+      };
+
       // 分段聚合文字数据
       const polymerizeTextList = (domList) => {
         const sectionList = [];
@@ -121,65 +130,111 @@
         const curSection = {
           width: 0,
           height: 0,
-          fontSize: "",
+          fontSize: 0,
           fontFamily: "",
           x: 0,
           y: 0,
           text: "",
         };
         let lastHeight = 0;
-        let lastLeft = 0;
-        let lastTop = 0;
-        let lastTopMin = 0;
-        const heightDis = 15;
-
+        const distance = 10;
+        const punctuationRegex = /[.。!?！？]/;
         for (let i = 0; i < domList.length; i++) {
           const item = domList[i];
-          const curText = item.innerText;
-          const rect = item.getBoundingClientRect();
-          // 记录最开始的x,y坐标
-          if (reset === 0) {
-            reset = 1;
-            curSection.x = rect.x;
-            curSection.y = rect.y;
-          }
-          if (curText) {
-            curSection.text += curText;
-            curSection.fontFamily = item.style.fontFamily;
-            const fontSizeNum = Number.parseInt(item.style.fontSize);
-            curSection.fontSize = Math.max(fontSizeNum, curSection.fontSize);
-            lastHeight = Math.max(lastHeight, rect.height);
-            lastLeft = rect.x + rect.width;
-            lastTop = rect.y;
-            lastTopMin = lastTopMin > 0 ? Math.min(lastTopMin, rect.y) : rect.y;
-          } else {
-            curSection.text += " ";
-          }
-          if (item.nodeName === "BR") {
+          if (item.nodeName !== "BR") {
+            const curText = item.innerText;
+            const rect = item.getBoundingClientRect();
+            const sLeft = item.style.left.replace("px", "") / 1;
+            const sTop = item.style.top.replace("px", "") / 1;
+            // 记录最开始的x,y坐标
+            if (reset === 0) {
+              reset = 1;
+              curSection.x = sLeft;
+              curSection.y = sTop;
+            }
+
+            if (curText) {
+              curSection.text += curText;
+              curSection.fontFamily = item.style.fontFamily;
+              curSection.y =
+                curSection.y > 0 ? Math.min(curSection.y, sTop) : sTop;
+              const fontSizeNum = Number.parseInt(item.style.fontSize);
+              curSection.fontSize =
+                curSection.fontSize > 0
+                  ? Math.max(fontSizeNum, curSection.fontSize)
+                  : fontSizeNum;
+              lastHeight =
+                lastHeight > 0
+                  ? Math.max(lastHeight, rect.height)
+                  : rect.height;
+            } else {
+              curSection.text += " ";
+            }
+
             const nextItem = domList[i + 1];
             if (nextItem) {
-              const nextRect = nextItem.getBoundingClientRect();
-              const nextFontSize = Number.parseInt(nextItem.style.fontSize);
-              const diff = nextRect.y - (lastTop + lastHeight);
-              curSection.height += lastHeight + diff;
-              curSection.width = Math.max(
-                curSection.width,
-                lastLeft - curSection.x
-              );
-              if (curSection.fontSize !== nextFontSize || diff > heightDis) {
-                curSection.height -= diff;
-                curSection.y = Math.min(curSection.y, lastTopMin);
+              let isPush = false;
+
+              // 如果下一个是换行符，则判断是否分段
+              if (nextItem.nodeName === "BR") {
+                const nextTextDom = domList[i + 2];
+                if (nextTextDom) {
+                  const nextTextTop =
+                    nextTextDom.style.top.replace("px", "") / 1;
+                  const nextTextFontSize = Number.parseInt(
+                    nextTextDom.style.fontSize
+                  );
+                  const wordNum = countWords(
+                    curSection.text.replace(/\d/g, "")
+                  );
+                  curSection.width = Math.max(
+                    curSection.width,
+                    sLeft + rect.width - curSection.x
+                  );
+                  const diff = Math.abs(nextTextTop - (sTop + lastHeight));
+
+                  curSection.height += lastHeight + diff;
+                  // 满足条件重新分段
+                  // 1 文字大小不一致
+                  // 2 两个文字块之间的距离大于15
+                  // 3 一个单词直接换行
+                  if (
+                    curSection.fontSize !== nextTextFontSize ||
+                    diff > distance ||
+                    wordNum === 1
+                  ) {
+                    curSection.height -= diff;
+                    isPush = true;
+                  }
+                }
+              } else {
+                const nextLeft = nextItem.style.left.replace("px", "") / 1;
+                const nextTop = nextItem.style.top.replace("px", "") / 1;
+                if (
+                  Math.abs(curSection.y - nextTop) <= 2 &&
+                  nextLeft - (sLeft + rect.width) > distance
+                ) {
+                  curSection.width = sLeft + rect.width - curSection.x;
+                  curSection.height = lastHeight;
+                  isPush = true;
+                }
+              }
+              // 增加段落
+              if (isPush) {
+                if (nextItem.nodeName === "BR") {
+                  i++;
+                }
+
+                reset = 0;
+                isPush = false;
                 sectionList.push(Object.assign({}, curSection));
+                lastHeight = 0;
+                curSection.fontSize = 0;
                 curSection.text = "";
                 curSection.width = "";
                 curSection.height = 0;
-                curSection.fontSize = "";
-                curSection.x = nextRect.x;
-                curSection.y = nextRect.y;
-                lastHeight = 0;
-                lastTopMin = 0;
+                curSection.y = 0;
               }
-              lastTop = 0;
             }
           }
         }
@@ -225,7 +280,10 @@
       };
 
       loadingTask.promise.then((pdfDocument) => {
-        pdfDocument.getPage(1).then(async (page) => {
+        console.log("pdfjsLib", pdfjsLib);
+        console.log("pdfDocument", pdfDocument.numPages);
+
+        pdfDocument.getPage(3).then(async (page) => {
           // 获取 PDF 页面容器
           const container = document.getElementById("left-column");
 
@@ -247,6 +305,7 @@
           const adjustedViewport = page.getViewport({ scale });
           textLayerDiv.style.width = `${adjustedViewport.width}px`;
           textLayerDiv.style.height = `${adjustedViewport.height}px`;
+          console.log("page", page);
 
           // 4. 设置 canvas 的尺寸
           canvas.width = adjustedViewport.width;
@@ -255,6 +314,7 @@
             canvasContext: ctx,
             viewport: adjustedViewport,
           };
+
           page.render(renderContext);
           canvas2.width = adjustedViewport.width;
           canvas2.height = adjustedViewport.height;
